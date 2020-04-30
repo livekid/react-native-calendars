@@ -10,7 +10,6 @@ import Week from '../expandableCalendar/week';
 import asCalendarConsumer from './asCalendarConsumer';
 import {weekDayNames} from '../dateutils';
 
-
 const commons = require('./commons');
 const UPDATE_SOURCES = commons.UPDATE_SOURCES;
 const NUMBER_OF_PAGES = 2; // must be a positive number
@@ -29,13 +28,15 @@ class WeekCalendar extends Component {
     /** whether to have shadow/elevation for the calendar */
     allowShadow: PropTypes.bool,
     /** whether to hide the names of the week days */
-    hideDayNames: PropTypes.bool
+    hideDayNames: PropTypes.bool,
+    addCustomStyleToLastDay: PropTypes.bool,
   };
 
   static defaultProps = {
     firstDay: 0,
-    allowShadow: true
-  }
+    allowShadow: true,
+    addCustomStyleToLastDay: false,
+  };
 
   constructor(props) {
     super(props);
@@ -46,16 +47,22 @@ class WeekCalendar extends Component {
     this.page = NUMBER_OF_PAGES;
 
     this.state = {
-      items: this.getDatesArray()
+      items: this.getDatesArray(),
     };
   }
 
   componentDidUpdate(prevProps) {
     const {updateSource, date} = this.props.context;
-    
-    if (date !== prevProps.context.date && updateSource !== UPDATE_SOURCES.WEEK_SCROLL) {
+
+    if (
+      date !== prevProps.context.date &&
+      updateSource !== UPDATE_SOURCES.WEEK_SCROLL
+    ) {
       this.setState({items: this.getDatesArray()});
-      this.list.current.scrollToIndex({animated: false, index: NUMBER_OF_PAGES});
+      this.list.current.scrollToIndex({
+        animated: false,
+        index: NUMBER_OF_PAGES,
+      });
     }
   }
 
@@ -85,7 +92,7 @@ class WeekCalendar extends Component {
     const dd = weekIndex === 0 ? d : d.addDays(firstDay - dayOfTheWeek);
     const newDate = dd.addWeeks(weekIndex);
     const dateString = newDate.toString('yyyy-MM-dd');
-    
+
     return dateString;
   }
 
@@ -101,22 +108,36 @@ class WeekCalendar extends Component {
         marked[context.date] = {selected: true};
       }
       return marked;
-    } 
+    }
     return {[context.date]: {selected: true}};
   }
 
   onDayPress = (value) => {
-    _.invoke(this.props.context, 'setDate', value.dateString, UPDATE_SOURCES.DAY_PRESS);
-  }
+    _.invoke(
+      this.props.context,
+      'setDate',
+      value.dateString,
+      UPDATE_SOURCES.DAY_PRESS,
+    );
+  };
 
-  onScroll = ({nativeEvent: {contentOffset: {x}}}) => {
+  onScroll = ({
+    nativeEvent: {
+      contentOffset: {x},
+    },
+  }) => {
     const newPage = Math.round(x / this.containerWidth);
-    
+
     if (this.page !== newPage) {
       const {items} = this.state;
       this.page = newPage;
 
-      _.invoke(this.props.context, 'setDate', items[this.page], UPDATE_SOURCES.WEEK_SCROLL);
+      _.invoke(
+        this.props.context,
+        'setDate',
+        items[this.page],
+        UPDATE_SOURCES.WEEK_SCROLL,
+      );
 
       if (this.page === items.length - 1) {
         for (let i = 0; i <= NUMBER_OF_PAGES; i++) {
@@ -130,7 +151,7 @@ class WeekCalendar extends Component {
         this.setState({items: [...items]});
       }
     }
-  }
+  };
 
   onMomentumScrollEnd = () => {
     const {items} = this.state;
@@ -138,7 +159,10 @@ class WeekCalendar extends Component {
     const isLastPage = this.page === items.length - 1;
 
     if (isFirstPage || isLastPage) {
-      this.list.current.scrollToIndex({animated: false, index: NUMBER_OF_PAGES});
+      this.list.current.scrollToIndex({
+        animated: false,
+        index: NUMBER_OF_PAGES,
+      });
       this.page = NUMBER_OF_PAGES;
       const newWeekArray = this.getDatesArray();
 
@@ -156,32 +180,43 @@ class WeekCalendar extends Component {
         this.setState({items: [...items]});
       }, 100);
     }
-  }
+  };
 
   renderItem = ({item}) => {
     const {calendarWidth, style, onDayPress, ...others} = this.props;
 
     return (
-      <Week 
-        {...others} 
-        key={item} 
-        current={item} 
+      <Week
+        {...others}
+        key={item}
+        current={item}
         style={[{width: calendarWidth || this.containerWidth}, style]}
         markedDates={this.getMarkedDates()}
         onDayPress={onDayPress || this.onDayPress}
       />
     );
-  }
+  };
 
   getItemLayout = (data, index) => {
     return {
       length: this.containerWidth,
       offset: this.containerWidth * index,
-      index
+      index,
     };
-  }
+  };
 
   keyExtractor = (item, index) => index.toString();
+
+  getDayTextStyle = (index, weekDaysNames) => {
+    if (
+      this.props.addCustomStyleToLastDay &&
+      index == weekDaysNames.length - 1
+    ) {
+      return this.style.lastDayHeader;
+    }
+
+    return this.style.dayHeader;
+  };
 
   render() {
     const {allowShadow, firstDay, hideDayNames} = this.props;
@@ -189,16 +224,21 @@ class WeekCalendar extends Component {
     let weekDaysNames = weekDayNames(firstDay);
 
     return (
-      <View testID={this.props.testID} style={[allowShadow && this.style.containerShadow, !hideDayNames && {paddingBottom: 6}]}>
-        {!hideDayNames &&
-          <View style={[{marginTop: 12, marginBottom: -2},this.style.week]}>
+      <View
+        testID={this.props.testID}
+        style={[
+          !hideDayNames && {paddingBottom: 6},
+          allowShadow && this.style.containerShadow,
+        ]}>
+        {!hideDayNames && (
+          <View style={[{marginTop: 12, marginBottom: -2}, this.style.week]}>
             {/* {this.props.weekNumbers && <Text allowFontScaling={false} style={this.style.dayHeader}></Text>} */}
             {weekDaysNames.map((day, idx) => (
-              <Text 
-                allowFontScaling={false} 
-                key={idx} 
-                style={this.style.dayHeader} 
-                numberOfLines={1} 
+              <Text
+                allowFontScaling={false}
+                key={idx}
+                style={this.getDayTextStyle(index, weekDayNames)}
+                numberOfLines={1}
                 accessibilityLabel={''}
                 // accessible={false} // not working
                 // importantForAccessibility='no'
@@ -206,7 +246,8 @@ class WeekCalendar extends Component {
                 {day}
               </Text>
             ))}
-          </View>}
+          </View>
+        )}
         <FlatList
           ref={this.list}
           data={items}

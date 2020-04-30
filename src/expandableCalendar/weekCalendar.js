@@ -237,7 +237,7 @@ class WeekCalendar extends Component {
               <Text
                 allowFontScaling={false}
                 key={idx}
-                style={this.getDayTextStyle(index, weekDayNames)}
+                style={this.getDayTextStyle(idx, weekDayNames)}
                 numberOfLines={1}
                 accessibilityLabel={''}
                 // accessible={false} // not working

@@ -134,6 +134,7 @@ class Week extends Component {
       <DayComp
         testID={`${SELECT_DATE_SLOT}-${dateAsObject.dateString}`}
         state={state}
+        index={id}
         theme={this.props.theme}
         onPress={this.props.onDayPress}
         onLongPress={this.props.onDayPress}

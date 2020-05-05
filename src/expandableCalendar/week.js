@@ -129,12 +129,14 @@ class Week extends Component {
     const DayComp = this.getDayComponent();
     const dayDate = day.getDate();
     const dateAsObject = xdateToData(day);
+    const testID = `${SELECT_DATE_SLOT}-${dateAsObject.dateString}`;
 
     return (
       <DayComp
-        testID={`${SELECT_DATE_SLOT}-${dateAsObject.dateString}`}
+        testID={testID}
         state={state}
         index={id}
+        key={testID}
         theme={this.props.theme}
         onPress={this.props.onDayPress}
         onLongPress={this.props.onDayPress}
